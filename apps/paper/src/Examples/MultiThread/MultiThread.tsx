@@ -1,13 +1,33 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
-import { Canvas } from "react-native-wgpu";
+import { Canvas } from "@shopify/react-native-skia";
 import { Image, Skia, SkImage } from "@shopify/react-native-skia";
 
 export function MultiThread() {
 
+  const jsThreadImage = useMemo(() => {
+    const surface = Skia.Surface.MakeOffscreen(256, 256);
+    if (surface === null) {
+      return;
+    }
+    const canvas = surface.getCanvas();
+    const paint = Skia.Paint();
+    paint.setColor(Skia.Color("#FF0000"));
+    canvas.drawRect({
+      x: 0,
+      y: 0,
+      width: 256,
+      height: 256,
+    }, paint);
+    surface.flush();
+    return surface.makeImageSnapshot();
+  }, []);
 
   const texture = useSharedValue<bigint | null>(null);
+  useEffect(() => {
+    texture.value = jsThreadImage?.getBackendTexture();      
+  }, []);
   const image = useDerivedValue(() => {
     if (texture.value === null) {
       return null;
@@ -15,22 +35,14 @@ export function MultiThread() {
     return (Skia.Image.MakeImageFromNativeTexture(texture.value, 256, 256) as SkImage);
   });
 
-  let snapshot = useRef<SkImage | null>(null);
-
-  useEffect(() => {
-    const surface = Skia.Surface.MakeOffscreen(256, 256);
-    const canvas = surface?.getCanvas();
-    canvas?.drawColor(Skia.Color("#FF0000"));
-    surface?.flush();
-    const image = surface?.makeImageSnapshot();
-    snapshot.current = image ?? null;
-    texture.value = image?.getBackendTexture();      
-  }, []);
-
+  // const image = useMemo(() => 
+  //   mainThreadImage?.makeNonTextureImage(),
+  //   [mainThreadImage]
+  // );
 
   return (
     <View style={style.container}>
-      <Canvas>
+      <Canvas style={style.canvas}>
         <Image image={image} width={256} height={256} />
       </Canvas>
     </View>
@@ -41,7 +53,7 @@ const style = StyleSheet.create({
   container: {
     flex: 1,
   },
-  webgpu: {
+  canvas: {
     flex: 1,
   },
 });

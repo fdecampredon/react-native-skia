@@ -79,9 +79,19 @@ public:
   }
 
   sk_sp<SkImage> makeImageFromNativeTexture(void *nativeTexture, int width, int height) {
-    auto eglImage = reinterpret_cast<EGLImage>(nativeTexture);
+    auto textureId = reinterpret_cast<uint64_t>(nativeTexture);
 
-    return OpenGLContext::getInstance().MakeImageFromEGLImage(eglImage, width, height);
+    GrGLTextureInfo textureInfo;
+    textureInfo.fTarget = GL_TEXTURE_2D;
+    textureInfo.fID = textureId;
+    textureInfo.fFormat = GR_GL_RGBA8;
+
+    GrBackendTexture backendTexture = GrBackendTextures::MakeGL(
+        width, height, skgpu::Mipmapped::kNo, textureInfo
+    );
+    return SkImages::BorrowTextureFrom(
+        OpenGLContext::getInstance().getDirectContext(), backendTexture, kTopLeft_GrSurfaceOrigin,
+        kRGBA_8888_SkColorType, kOpaque_SkAlphaType, nullptr);
   }
 
   std::shared_ptr<RNSkVideo> createVideo(const std::string &url) override {
@@ -164,8 +174,7 @@ public:
     if (!GrBackendTextures::GetGLTextureInfo(texture, &textureInfo)) {
       return -1;
     }
-    auto eglImage = OpenGLContext::getInstance().MakeEGLImage(textureInfo);
-    return reinterpret_cast<uint64_t>(eglImage);
+    return textureInfo.fID;
   }
 
 #if !defined(SK_GRAPHITE)
