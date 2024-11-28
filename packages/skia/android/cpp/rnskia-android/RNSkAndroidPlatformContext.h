@@ -78,6 +78,12 @@ public:
 #endif
   }
 
+  sk_sp<SkImage> makeImageFromNativeTexture(void *nativeTexture, int width, int height) {
+    auto eglImage = reinterpret_cast<EGLImage>(nativeTexture);
+
+    return OpenGLContext::getInstance().MakeImageFromEGLImage(eglImage, width, height);
+  }
+
   std::shared_ptr<RNSkVideo> createVideo(const std::string &url) override {
     auto jniVideo = _jniPlatformContext->createVideo(url);
     return std::make_shared<RNSkAndroidVideo>(jniVideo);
@@ -147,6 +153,19 @@ public:
 #else
     return 0;
 #endif
+  }
+
+  uint64_t getImageBackendTexture(sk_sp<SkImage> image) {
+    GrBackendTexture texture;
+    if (!SkImages::GetBackendTextureFromImage(image, &texture, true)) {
+      return -1;
+    }
+    GrGLTextureInfo textureInfo;
+    if (!GrBackendTextures::GetGLTextureInfo(texture, &textureInfo)) {
+      return -1;
+    }
+    auto eglImage = OpenGLContext::getInstance().MakeEGLImage(textureInfo);
+    return reinterpret_cast<uint64_t>(eglImage);
   }
 
 #if !defined(SK_GRAPHITE)
