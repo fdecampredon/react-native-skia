@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
-import { Canvas } from "@shopify/react-native-skia";
+import { Canvas, Rect } from "@shopify/react-native-skia";
 import { Image, Skia, SkImage } from "@shopify/react-native-skia";
 
 export function MultiThread() {
@@ -32,18 +32,29 @@ export function MultiThread() {
     if (texture.value === null) {
       return null;
     }
-    return (Skia.Image.MakeImageFromNativeTexture(texture.value, 256, 256) as SkImage);
+    console.log("texture.value", texture.value);
+    const image = (Skia.Image.MakeImageFromNativeTexture(texture.value, 256, 256) as SkImage);
+    console.log("image", image);
+    return image;
   });
 
+
   // const image = useMemo(() => 
-  //   mainThreadImage?.makeNonTextureImage(),
-  //   [mainThreadImage]
+  //   Skia.Image.MakeImageFromNativeTexture(jsThreadImage.getBackendTexture(), 256, 256).makeNonTextureImage(),
+  //   [jsThreadImage]
   // );
+
+  // const image = useMemo(() => 
+  //   jsThreadImage?.makeNonTextureImage(),
+  //   [jsThreadImage]
+  // );
+  
 
   return (
     <View style={style.container}>
       <Canvas style={style.canvas}>
         <Image image={image} width={256} height={256} />
+        <Rect x={0} y={0} width={120} height={120} color="blue" />
       </Canvas>
     </View>
   );

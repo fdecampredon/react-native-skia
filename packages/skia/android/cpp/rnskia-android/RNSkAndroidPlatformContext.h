@@ -80,8 +80,40 @@ public:
 
   sk_sp<SkImage> makeImageFromNativeTexture(void *nativeTexture, int width, int height) {
     auto textureId = reinterpret_cast<uint64_t>(nativeTexture);
+    OpenGLContext::getInstance().makeCurrent();
+    if (glIsTexture(textureId) == GL_FALSE) {
+      throw new std::runtime_error("Not valid texture");
+    }
 
-    GrGLTextureInfo textureInfo;
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureId, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      throw new std::runtime_error("Not frame buffer");
+    }
+    std::vector<GLubyte> pixels(width * height * 4); // Pour RGBA
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+    SkImageInfo imageInfo = SkImageInfo::Make(
+        width, height,             // Dimensions
+        kRGBA_8888_SkColorType,    // Format des pixels (RGBA 8 bits par canal)
+        kUnpremul_SkAlphaType,     // Alpha non prémultiplié
+        SkColorSpace::MakeSRGB()   // Espace colorimétrique (sRGB)
+    );
+
+    // Crée un objet SkData à partir des pixels
+    sk_sp<SkData> skData = SkData::MakeWithCopy(pixels.data(), pixels.size());
+
+    // Crée une SkImage à partir des données
+    return SkImages::RasterFromData(imageInfo, skData, width * 4);
+
+
+
+    /*GrGLTextureInfo textureInfo;
     textureInfo.fTarget = GL_TEXTURE_2D;
     textureInfo.fID = textureId;
     textureInfo.fFormat = GR_GL_RGBA8;
@@ -91,7 +123,7 @@ public:
     );
     return SkImages::BorrowTextureFrom(
         OpenGLContext::getInstance().getDirectContext(), backendTexture, kTopLeft_GrSurfaceOrigin,
-        kRGBA_8888_SkColorType, kOpaque_SkAlphaType, nullptr);
+        kRGBA_8888_SkColorType, kPremul_SkAlphaType, nullptr);*/
   }
 
   std::shared_ptr<RNSkVideo> createVideo(const std::string &url) override {
@@ -174,6 +206,71 @@ public:
     if (!GrBackendTextures::GetGLTextureInfo(texture, &textureInfo)) {
       return -1;
     }
+    if (glIsTexture(textureInfo.fID) == GL_FALSE) {
+      return -1;
+    }
+
+
+    OpenGLContext::getInstance().makeCurrent();
+
+    /*GLuint texId;
+    glGenTextures(1, &texId);
+
+    // Crée un framebuffer
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+
+    // Bind le framebuffer
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    // Attache la texture source au framebuffer
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureInfo.fID, 0);
+
+    // Vérifie que le framebuffer est complet
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      glDeleteFramebuffers(1, &fbo);
+      throw std::runtime_error("Framebuffer is not complete!");
+    }
+
+    // Bind la texture cible
+    glBindTexture(GL_TEXTURE_2D, texId);
+
+    // Copier le contenu du framebuffer dans la texture cible
+    glCopyTexImage2D(
+        GL_TEXTURE_2D, 0, GL_RGBA, // Cible, niveau de mipmap, format interne
+        0, 0, image->width(), image->height(),       // Position et dimensions
+        0                          // Bordure (toujours 0 en OpenGL ES)
+    );
+
+    return texId;
+
+    // Nettoyage
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &fbo);*/
+
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureInfo.fID, 0);
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+      glBindFramebuffer(GL_FRAMEBUFFER, 0);
+      return -1;
+    }
+    auto  width= image->width();
+    auto  height= image->height();
+    std::vector<GLubyte> pixels(width * height * 4);
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+
+
+
+    /*glBindTexture(GL_TEXTURE_2D, textureInfo.fID);
+    std::vector<GLubyte> data(width * height * 4, 255); // Remplissage blanc
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, data.data());
+    glBindTexture(GL_TEXTURE_2D, 0);*/
+
     return textureInfo.fID;
   }
 
