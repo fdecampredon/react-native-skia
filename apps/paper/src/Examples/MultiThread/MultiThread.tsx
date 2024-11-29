@@ -54,7 +54,6 @@ export function MultiThread() {
     <View style={style.container}>
       <Canvas style={style.canvas}>
         <Image image={image} width={256} height={256} />
-        <Rect x={0} y={0} width={120} height={120} color="blue" />
       </Canvas>
     </View>
   );
