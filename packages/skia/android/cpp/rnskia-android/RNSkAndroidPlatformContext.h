@@ -97,6 +97,9 @@ public:
     }
     std::vector<GLubyte> pixels(width * height * 4); // Pour RGBA
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &fbo);
 
     SkImageInfo imageInfo = SkImageInfo::Make(
         width, height,             // Dimensions
@@ -243,14 +246,13 @@ public:
         0                          // Bordure (toujours 0 en OpenGL ES)
     );
 
-    return texId;
-
-    // Nettoyage
     glBindTexture(GL_TEXTURE_2D, 0);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glDeleteFramebuffers(1, &fbo);*/
+    glDeleteFramebuffers(1, &fbo)
+    return texId;*/
 
-    GLuint fbo;
+
+   /* GLuint fbo;
     glGenFramebuffers(1, &fbo);
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
 
@@ -263,6 +265,10 @@ public:
     auto  height= image->height();
     std::vector<GLubyte> pixels(width * height * 4);
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDeleteFramebuffers(1, &fbo);*/
+   glFinish();
 
 
 
