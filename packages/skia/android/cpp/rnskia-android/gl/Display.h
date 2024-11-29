@@ -43,6 +43,8 @@ public:
 
     EGLint att[] = {EGL_RENDERABLE_TYPE,
                     EGL_OPENGL_ES2_BIT,
+                    EGL_SURFACE_TYPE,
+                    EGL_WINDOW_BIT | EGL_PBUFFER_BIT,
                     EGL_ALPHA_SIZE,
                     8,
                     EGL_BLUE_SIZE,
@@ -73,9 +75,10 @@ public:
   std::unique_ptr<Context> makeContext(const EGLConfig &config,
                                        const Context *share_context) {
     EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
+    EGLContext sharedContext = share_context != nullptr ? share_context->getHandle() : nullptr;
     auto context = eglCreateContext(
         _display, config,
-        share_context != nullptr ? share_context->getHandle() : nullptr,
+        sharedContext,
         contextAttribs);
 
     if (context == EGL_NO_CONTEXT) {

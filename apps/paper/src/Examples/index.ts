@@ -4,6 +4,7 @@ export * from "./Breathe";
 export * from "./Filters";
 export * from "./Gooey";
 export * from "./Matrix";
+export * from "./MultiThread";
 export * from "./Graphs";
 export * from "./API";
 export * from "./Breathe";

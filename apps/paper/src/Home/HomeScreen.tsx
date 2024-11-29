@@ -49,6 +49,11 @@ export const HomeScreen = () => {
         description="Digital Rain"
         route="Matrix"
       />
+       <HomeScreenButton
+        title="Multi Thread"
+        description="Multi Thread"
+        route="MultiThread"
+      />
       <HomeScreenButton
         title="☀️ Aurora"
         description="Aurora Design via Mesh Gradients"

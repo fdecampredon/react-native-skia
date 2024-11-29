@@ -18,6 +18,7 @@ import {
   GraphsScreen,
   Hue,
   Matrix,
+  MultiThread,
   Glassmorphism,
   Neumorphism,
   PerformanceDrawingTest,
@@ -141,6 +142,13 @@ const App = () => {
             <Stack.Screen
               name="Matrix"
               component={Matrix}
+              options={{
+                header: () => null,
+              }}
+            />
+            <Stack.Screen
+              name="MultiThread"
+              component={MultiThread}
               options={{
                 header: () => null,
               }}

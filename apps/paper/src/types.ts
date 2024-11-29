@@ -12,6 +12,7 @@ export type StackParamList = {
   Gooey: undefined;
   Hue: undefined;
   Matrix: undefined;
+  MultiThread: undefined;
   Severance: undefined;
   Aurora: undefined;
   Glassmorphism: undefined;

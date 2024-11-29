@@ -51,6 +51,7 @@ public:
         runtime, std::make_shared<JsiSkImage>(getContext(), std::move(image)));
   }
 
+
   JSI_HOST_FUNCTION(MakeImageFromViewTag) {
     auto viewTag = arguments[0].asNumber();
     auto context = getContext();
@@ -78,10 +79,25 @@ public:
         });
   }
 
+  JSI_HOST_FUNCTION(MakeImageFromNativeTexture) {
+    jsi::BigInt pointer = arguments[0].asBigInt(runtime);
+    const uintptr_t nativeBufferPointer = pointer.asUint64(runtime);
+    void *rawPointer = reinterpret_cast<void *>(nativeBufferPointer);
+    auto image = getContext()->makeImageFromNativeTexture(
+        rawPointer, arguments[1].asNumber(), arguments[2].asNumber());
+    if (image == nullptr) {
+      throw std::runtime_error("Failed to convert NativeBuffer to SkImage!");
+    }
+    return jsi::Object::createFromHostObject(
+        runtime, std::make_shared<JsiSkImage>(getContext(), std::move(image)));
+  }
+
   JSI_EXPORT_FUNCTIONS(JSI_EXPORT_FUNC(JsiSkImageFactory, MakeImageFromEncoded),
                        JSI_EXPORT_FUNC(JsiSkImageFactory, MakeImageFromViewTag),
                        JSI_EXPORT_FUNC(JsiSkImageFactory,
                                        MakeImageFromNativeBuffer),
+                       JSI_EXPORT_FUNC(JsiSkImageFactory,
+                                       MakeImageFromNativeTexture),
                        JSI_EXPORT_FUNC(JsiSkImageFactory, MakeImage))
 
   explicit JsiSkImageFactory(std::shared_ptr<RNSkPlatformContext> context)
