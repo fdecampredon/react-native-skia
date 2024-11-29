@@ -80,11 +80,8 @@ public:
   }
 
   JSI_HOST_FUNCTION(MakeImageFromNativeTexture) {
-    jsi::BigInt pointer = arguments[0].asBigInt(runtime);
-    const uintptr_t nativeBufferPointer = pointer.asUint64(runtime);
-    void *rawPointer = reinterpret_cast<void *>(nativeBufferPointer);
-    auto image = getContext()->makeImageFromNativeTexture(
-        rawPointer, arguments[1].asNumber(), arguments[2].asNumber());
+    auto image = getContext()->makeImageFromNativeTexture(runtime,
+      jsi::Value(runtime, arguments[0]), arguments[1].asNumber(), arguments[2].asNumber(),  count > 3 && arguments[3].asBool());
     if (image == nullptr) {
       throw std::runtime_error("Failed to convert NativeBuffer to SkImage!");
     }
