@@ -6,28 +6,58 @@ import { Image, Skia, SkImage } from "@shopify/react-native-skia";
 
 export function MultiThread() {
 
-  const jsThreadImage = useMemo(() => {
-    const surface = Skia.Surface.MakeOffscreen(256, 256);
+  // const jsThreadImage = useMemo(() => {
+  //   const surface = Skia.Surface.MakeOffscreen(256, 256);
+  //   if (surface === null) {
+  //     return;
+  //   }
+  //   const canvas = surface.getCanvas();
+  //   const paint = Skia.Paint();
+  //   paint.setColor(Skia.Color("#0000FF"));
+  //   canvas.drawRect({
+  //     x: 0,
+  //     y: 0,
+  //     width: 256,
+  //     height: 256,
+  //   }, paint);
+  //   paint.setColor(Skia.Color("#FF0000"));
+  //   canvas.drawCircle(128, 128, 64, paint);
+  //   surface.flush();
+  //   return surface.makeImageSnapshot();
+  // }, []);
+
+  // const texture = useSharedValue<bigint | null>(null);
+  // useEffect(() => {
+  //   texture.value = jsThreadImage?.getBackendTexture();      
+  // }, []);
+
+
+
+  const jsThreadSurface = useMemo(() => {
+    return Skia.Surface.MakeOffscreen(256, 256);
+  }, []);
+
+  const texture = useSharedValue<bigint | null>(null);
+  useEffect(() => {
+    const surface = jsThreadSurface;
     if (surface === null) {
       return;
     }
     const canvas = surface.getCanvas();
     const paint = Skia.Paint();
-    paint.setColor(Skia.Color("#FF0000"));
+    paint.setColor(Skia.Color("#0000FF"));
     canvas.drawRect({
       x: 0,
       y: 0,
       width: 256,
       height: 256,
     }, paint);
+    paint.setColor(Skia.Color("#FF0000"));
+    canvas.drawCircle(128, 128, 64, paint);
     surface.flush();
-    return surface.makeImageSnapshot();
+    texture.value = jsThreadSurface?.getBackendTexture();      
   }, []);
 
-  const texture = useSharedValue<bigint | null>(null);
-  useEffect(() => {
-    texture.value = jsThreadImage?.getBackendTexture();      
-  }, []);
   const image = useDerivedValue(() => {
     if (texture.value === null) {
       return null;

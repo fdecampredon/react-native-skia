@@ -4,6 +4,7 @@
 #import <React/RCTUtils.h>
 #include <thread>
 #include <utility>
+#include <Metal/Metal.h>
 
 #if defined(SK_GRAPHITE)
 #include "DawnContext.h"
@@ -155,6 +156,40 @@ uint64_t RNSkiOSPlatformContext::makeNativeBuffer(sk_sp<SkImage> image) {
   return reinterpret_cast<uint64_t>(pixelBuffer);
 }
 
+
+jsi::Value RNSkiOSPlatformContext::getImageBackendTexture(jsi::Runtime &runtime, sk_sp<SkImage> image) {
+  GrBackendTexture texture;
+  if (!SkImages::GetBackendTextureFromImage(image, &texture, true)) {
+    return jsi::Value::null();
+  }
+  GrMtlTextureInfo textureInfo;
+  if (!GrBackendTextures::GetMtlTextureInfo(texture, &textureInfo)) {
+    return jsi::Value::null();
+  }
+  id<MTLTexture> mtlTexture = (__bridge id<MTLTexture>)(textureInfo.fTexture.get());
+  
+  auto shareable = mtlTexture.shareable;
+  
+  CFRetain((CFTypeRef) mtlTexture);
+  
+  auto pointer = reinterpret_cast<uint64_t>(mtlTexture);
+  return jsi::BigInt::fromUint64(runtime, pointer);
+}
+
+jsi::Value RNSkiOSPlatformContext::getSurfaceBackendTexture(jsi::Runtime &runtime, sk_sp<SkSurface> surface) {
+  GrBackendTexture texture = SkSurfaces::GetBackendTexture(surface.get(), SkSurfaces::BackendHandleAccess::kFlushRead);
+  if (!texture.isValid()) {
+    return jsi::Value::null();
+  }
+  GrMtlTextureInfo textureInfo;
+  if (!GrBackendTextures::GetMtlTextureInfo(texture, &textureInfo)) {
+    return jsi::Value::null();
+  }
+  id<MTLTexture> mtlTexture =  (__bridge id<MTLTexture>)(textureInfo.fTexture.get()); 
+  auto pointer = reinterpret_cast<uint64_t>(mtlTexture);
+  return jsi::BigInt::fromUint64(runtime, pointer);
+}
+
 std::shared_ptr<RNSkVideo>
 RNSkiOSPlatformContext::createVideo(const std::string &url) {
   return std::make_shared<RNSkiOSVideo>(url, this);
@@ -190,6 +225,26 @@ sk_sp<SkImage> RNSkiOSPlatformContext::makeImageFromNativeBuffer(void *buffer) {
 #else
   return MetalContext::getInstance().MakeImageFromBuffer(buffer);
 #endif
+}
+
+sk_sp<SkImage> RNSkiOSPlatformContext::makeImageFromNativeTexture(
+  jsi::Runtime &runtime, jsi::Value jsiTextureInfo, int width, int height, bool mipMapped) {
+  if (!jsiTextureInfo.isBigInt()) {
+    throw std::runtime_error("Invalid textureInfo");
+  }
+  void* pointer = (void *)jsiTextureInfo.asBigInt(runtime).asUint64(runtime);
+  
+  id<MTLTexture> mtlTexture = (__bridge id<MTLTexture>)(pointer);
+  GrMtlTextureInfo textureInfo;
+  textureInfo.fTexture.retain((__bridge const void*)mtlTexture);
+  
+  GrBackendTexture texture = GrBackendTextures::MakeMtl(
+    width, height, mipMapped ? skgpu::Mipmapped::kYes: skgpu::Mipmapped::kNo, textureInfo);
+  
+  return SkImages::BorrowTextureFrom(
+    getDirectContext(), texture, kTopLeft_GrSurfaceOrigin,
+    kBGRA_8888_SkColorType, kPremul_SkAlphaType,
+                                     nullptr);
 }
 
 #if !defined(SK_GRAPHITE)
