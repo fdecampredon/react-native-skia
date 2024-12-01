@@ -85,7 +85,7 @@ export interface ImageFactory {
    * 
    * @returns Returns a valid SkImage, if the texture is invalid, an error is thrown.
    */
-  MakeImageFromNativeTexture: (texture: bigint, width: number, height: number, mipmapped: boolean) => SkImage;
+  MakeImageFromNativeTexture: (texture: unknown, width: number, height: number, mipmapped?: boolean) => SkImage;
 
   /**
    * Returns an image that will be a screenshot of the view represented by

@@ -37,7 +37,7 @@ export function MultiThread() {
     return Skia.Surface.MakeOffscreen(256, 256);
   }, []);
 
-  const texture = useSharedValue<bigint | null>(null);
+  const texture = useSharedValue<unknown>(null);
   useEffect(() => {
     const surface = jsThreadSurface;
     if (surface === null) {
