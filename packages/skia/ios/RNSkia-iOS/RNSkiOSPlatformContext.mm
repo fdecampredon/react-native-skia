@@ -162,6 +162,9 @@ jsi::Value RNSkiOSPlatformContext::getImageBackendTexture(jsi::Runtime &runtime,
   if (!SkImages::GetBackendTextureFromImage(image, &texture, true)) {
     return jsi::Value::null();
   }
+  if (!texture.isValid()) {
+    return jsi::Value::null();
+  }
   GrMtlTextureInfo textureInfo;
   if (!GrBackendTextures::GetMtlTextureInfo(texture, &textureInfo)) {
     return jsi::Value::null();
