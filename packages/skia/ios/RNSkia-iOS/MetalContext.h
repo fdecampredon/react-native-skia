@@ -36,8 +36,6 @@ public:
     return SkiaMetalSurfaceFactory::makeContext(&_context, window, width,
                                                 height);
   }
-  
-  id<MTLTexture> copyTextureForShare(id<MTLTexture> sourceTexture);
 
   GrDirectContext *getDirectContext() { return _context.skContext.get(); }
 

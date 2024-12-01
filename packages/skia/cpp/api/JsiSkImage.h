@@ -216,7 +216,11 @@ public:
   }
 
   JSI_HOST_FUNCTION(getBackendTexture) {
-    return getContext()->getImageBackendTexture(runtime, getObject());
+    auto image = getObject();
+    if (!image->isTextureBacked()) {
+      return jsi::Value::null();
+    }
+    return getContext()->getImageBackendTexture(runtime, image);
   }
 
   EXPORT_JSI_API_TYPENAME(JsiSkImage, Image)

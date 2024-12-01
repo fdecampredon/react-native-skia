@@ -78,11 +78,9 @@ public:
         runtime, std::make_shared<JsiSkImage>(getContext(), std::move(image)));
   }
   
-  
   JSI_HOST_FUNCTION(getBackendTexture) {
     return getContext()->getSurfaceBackendTexture(runtime, getObject());
   }
-
 
   JSI_EXPORT_FUNCTIONS(JSI_EXPORT_FUNC(JsiSkSurface, width),
                        JSI_EXPORT_FUNC(JsiSkSurface, height),

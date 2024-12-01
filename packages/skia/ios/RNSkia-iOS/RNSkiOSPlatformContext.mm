@@ -166,13 +166,7 @@ jsi::Value RNSkiOSPlatformContext::getImageBackendTexture(jsi::Runtime &runtime,
   if (!GrBackendTextures::GetMtlTextureInfo(texture, &textureInfo)) {
     return jsi::Value::null();
   }
-  id<MTLTexture> mtlTexture = (__bridge id<MTLTexture>)(textureInfo.fTexture.get());
-  
-  auto shareable = mtlTexture.shareable;
-  
-  CFRetain((CFTypeRef) mtlTexture);
-  
-  auto pointer = reinterpret_cast<uint64_t>(mtlTexture);
+  auto pointer = reinterpret_cast<uint64_t>(textureInfo.fTexture.get());
   return jsi::BigInt::fromUint64(runtime, pointer);
 }
 
@@ -185,8 +179,7 @@ jsi::Value RNSkiOSPlatformContext::getSurfaceBackendTexture(jsi::Runtime &runtim
   if (!GrBackendTextures::GetMtlTextureInfo(texture, &textureInfo)) {
     return jsi::Value::null();
   }
-  id<MTLTexture> mtlTexture =  (__bridge id<MTLTexture>)(textureInfo.fTexture.get()); 
-  auto pointer = reinterpret_cast<uint64_t>(mtlTexture);
+  auto pointer = reinterpret_cast<uint64_t>(textureInfo.fTexture.get());
   return jsi::BigInt::fromUint64(runtime, pointer);
 }
 
@@ -232,19 +225,52 @@ sk_sp<SkImage> RNSkiOSPlatformContext::makeImageFromNativeTexture(
   if (!jsiTextureInfo.isBigInt()) {
     throw std::runtime_error("Invalid textureInfo");
   }
-  void* pointer = (void *)jsiTextureInfo.asBigInt(runtime).asUint64(runtime);
-  
+  auto pointer = (void *)jsiTextureInfo.asBigInt(runtime).asUint64(runtime);
   id<MTLTexture> mtlTexture = (__bridge id<MTLTexture>)(pointer);
+  
+  SkColorType colorType = mtlPixelFormatToSkColorType(mtlTexture.pixelFormat);
+  if (colorType == SkColorType::kUnknown_SkColorType) {
+    throw std::runtime_error("Unsupported pixelFormat");
+  }
+  
   GrMtlTextureInfo textureInfo;
   textureInfo.fTexture.retain((__bridge const void*)mtlTexture);
   
   GrBackendTexture texture = GrBackendTextures::MakeMtl(
     width, height, mipMapped ? skgpu::Mipmapped::kYes: skgpu::Mipmapped::kNo, textureInfo);
   
-  return SkImages::BorrowTextureFrom(
-    getDirectContext(), texture, kTopLeft_GrSurfaceOrigin,
-    kBGRA_8888_SkColorType, kPremul_SkAlphaType,
-                                     nullptr);
+  return SkImages::BorrowTextureFrom(getDirectContext(), texture, kTopLeft_GrSurfaceOrigin, colorType, kPremul_SkAlphaType, nullptr);
+}
+
+SkColorType RNSkiOSPlatformContext::mtlPixelFormatToSkColorType(MTLPixelFormat pixelFormat) {
+    switch (pixelFormat) {
+        case MTLPixelFormatRGBA8Unorm:
+            return kRGBA_8888_SkColorType;
+        case MTLPixelFormatBGRA8Unorm:
+            return kBGRA_8888_SkColorType;
+        case MTLPixelFormatRGB10A2Unorm:
+            return kRGBA_1010102_SkColorType;
+        case MTLPixelFormatR8Unorm:
+            return kGray_8_SkColorType;
+        case MTLPixelFormatRGBA16Float:
+            return kRGBA_F16_SkColorType;
+        case MTLPixelFormatRG8Unorm:
+            return kR8G8_unorm_SkColorType;
+        case MTLPixelFormatR16Float:
+            return kA16_float_SkColorType;
+        case MTLPixelFormatRG16Float:
+            return kR16G16_float_SkColorType;
+        case MTLPixelFormatR16Unorm:
+            return kA16_unorm_SkColorType;
+        case MTLPixelFormatRG16Unorm:
+            return kR16G16_unorm_SkColorType;
+        case MTLPixelFormatRGBA16Unorm:
+            return kR16G16B16A16_unorm_SkColorType;
+        case MTLPixelFormatRGBA8Unorm_sRGB:
+            return kSRGBA_8888_SkColorType;
+        default:
+            return kUnknown_SkColorType;
+    }
 }
 
 #if !defined(SK_GRAPHITE)
@@ -270,3 +296,4 @@ RNSkiOSPlatformContext::takeScreenshotFromViewTag(size_t viewTag) {
 }
 
 } // namespace RNSkia
+

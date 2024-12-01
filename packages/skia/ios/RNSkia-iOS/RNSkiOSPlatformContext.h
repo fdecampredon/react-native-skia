@@ -89,6 +89,9 @@ public:
 
 private:
   ViewScreenshotService *_screenshotService;
+  
+  SkColorType mtlPixelFormatToSkColorType(MTLPixelFormat pixelFormat);
+
 };
 
 static void handleNotification(CFNotificationCenterRef center, void *observer,
