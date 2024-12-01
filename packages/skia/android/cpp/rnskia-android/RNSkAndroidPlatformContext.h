@@ -198,6 +198,26 @@ public:
     return jsiTextureInfo;
   }
 
+  jsi::Value getSurfaceBackendTexture(jsi::Runtime& runtime, sk_sp<SkSurface> surface) override {
+    GrBackendTexture texture = SkSurfaces::GetBackendTexture(
+        surface.get(), SkSurface::BackendHandleAccess::kFlushRead);
+    GrGLTextureInfo textureInfo;
+    if (!GrBackendTextures::GetGLTextureInfo(texture, &textureInfo)) {
+      return jsi::Value::null();
+    }
+
+    OpenGLContext::getInstance().makeCurrent();
+    glFlush();
+
+    jsi::Object jsiTextureInfo = jsi::Object(runtime);
+    jsiTextureInfo.setProperty(runtime, "fTarget", (int)textureInfo.fTarget);
+    jsiTextureInfo.setProperty(runtime, "fFormat", (int)textureInfo.fFormat);
+    jsiTextureInfo.setProperty(runtime, "fID", (int)textureInfo.fID);
+    jsiTextureInfo.setProperty(runtime, "fProtected", (bool)textureInfo.fProtected);
+
+    return jsiTextureInfo;
+  }
+
 #if !defined(SK_GRAPHITE)
   GrDirectContext *getDirectContext() override {
     return OpenGLContext::getInstance().getDirectContext();
