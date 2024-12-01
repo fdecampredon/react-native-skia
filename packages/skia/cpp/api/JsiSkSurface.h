@@ -77,7 +77,7 @@ public:
     return jsi::Object::createFromHostObject(
         runtime, std::make_shared<JsiSkImage>(getContext(), std::move(image)));
   }
-  
+
   JSI_HOST_FUNCTION(getBackendTexture) {
     return getContext()->getSurfaceBackendTexture(runtime, getObject());
   }

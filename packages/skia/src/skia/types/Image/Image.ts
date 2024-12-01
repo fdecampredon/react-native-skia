@@ -54,10 +54,10 @@ export interface SkImage extends SkJSIInstance<"Image"> {
    * The returned object is backend specific and should be used with caution.
    * It is the caller's responsibility to ensure that the texture is not used after the image is deleted.
    * The returned object may be null if the image does not have a backend texture.
-   * 
+   *
    * @return backend texture of the image or null
    */
-   getBackendTexture(): unknown;
+  getBackendTexture(): unknown;
 
   /**
    * Returns this image as a shader with the specified tiling. It will use cubic sampling.

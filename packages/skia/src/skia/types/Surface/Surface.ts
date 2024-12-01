@@ -21,10 +21,10 @@ export interface SkSurface extends SkJSIInstance<"Surface"> {
    * It is the caller's responsibility to ensure that the texture is not used after the surface is deleted
    * or draw operations are performed on the surface.
    * The returned object may be null if the surface does not have a backend texture.
-   * 
-   * @return backend texture of the surface or null 
+   *
+   * @return backend texture of the surface or null
    */
-   getBackendTexture(): unknown;
+  getBackendTexture(): unknown;
 
   /** Returns Image capturing Surface contents. Subsequent drawing to
      Surface contents are not captured.

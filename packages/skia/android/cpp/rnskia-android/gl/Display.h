@@ -75,11 +75,10 @@ public:
   std::unique_ptr<Context> makeContext(const EGLConfig &config,
                                        const Context *share_context) {
     EGLint contextAttribs[] = {EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE};
-    EGLContext sharedContext = share_context != nullptr ? share_context->getHandle() : nullptr;
-    auto context = eglCreateContext(
-        _display, config,
-        sharedContext,
-        contextAttribs);
+    EGLContext sharedContext =
+        share_context != nullptr ? share_context->getHandle() : nullptr;
+    auto context =
+        eglCreateContext(_display, config, sharedContext, contextAttribs);
 
     if (context == EGL_NO_CONTEXT) {
       LOG_EGL_ERROR;

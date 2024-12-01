@@ -124,8 +124,7 @@ void RNSkDomRenderer::renderDebugOverlays(SkCanvas *canvas) {
 
   // Build string
   std::ostringstream stream;
-  stream << "render: " << renderAvg << "ms"
-         << " fps: " << fps;
+  stream << "render: " << renderAvg << "ms" << " fps: " << fps;
 
   std::string debugString = stream.str();
 

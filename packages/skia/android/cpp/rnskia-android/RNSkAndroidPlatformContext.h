@@ -78,19 +78,26 @@ public:
 #endif
   }
 
-  sk_sp<SkImage> makeImageFromNativeTexture(jsi::Runtime& runtime, jsi::Value jsiTextureInfo, int width, int height, bool mipMapped)  override {
+  sk_sp<SkImage> makeImageFromNativeTexture(jsi::Runtime &runtime,
+                                            jsi::Value jsiTextureInfo,
+                                            int width, int height,
+                                            bool mipMapped) override {
     if (!jsiTextureInfo.isObject()) {
       throw new std::runtime_error("Invalid textureInfo");
     }
     auto jsiTextureInfoObj = jsiTextureInfo.asObject(runtime);
 
     GrGLTextureInfo textureInfo;
-    textureInfo.fTarget = (GrGLenum)jsiTextureInfoObj.getProperty(runtime, "fTarget").asNumber();
-    textureInfo.fID = (GrGLuint)jsiTextureInfoObj.getProperty(runtime, "fID").asNumber();
-    textureInfo.fFormat = (GrGLenum)jsiTextureInfoObj.getProperty(runtime, "fFormat").asNumber();
-    textureInfo.fProtected = jsiTextureInfoObj.getProperty(runtime, "fProtected").asBool()
-        ? skgpu::Protected::kYes
-        : skgpu::Protected::kNo;
+    textureInfo.fTarget =
+        (GrGLenum)jsiTextureInfoObj.getProperty(runtime, "fTarget").asNumber();
+    textureInfo.fID =
+        (GrGLuint)jsiTextureInfoObj.getProperty(runtime, "fID").asNumber();
+    textureInfo.fFormat =
+        (GrGLenum)jsiTextureInfoObj.getProperty(runtime, "fFormat").asNumber();
+    textureInfo.fProtected =
+        jsiTextureInfoObj.getProperty(runtime, "fProtected").asBool()
+            ? skgpu::Protected::kYes
+            : skgpu::Protected::kNo;
 
     OpenGLContext::getInstance().makeCurrent();
     if (glIsTexture(textureInfo.fID) == GL_FALSE) {
@@ -98,11 +105,13 @@ public:
     }
 
     GrBackendTexture backendTexture = GrBackendTextures::MakeGL(
-        width, height, mipMapped ? skgpu::Mipmapped::kYes : skgpu::Mipmapped::kNo, textureInfo
-    );
+        width, height,
+        mipMapped ? skgpu::Mipmapped::kYes : skgpu::Mipmapped::kNo,
+        textureInfo);
     return SkImages::BorrowTextureFrom(
-        OpenGLContext::getInstance().getDirectContext(), backendTexture, kTopLeft_GrSurfaceOrigin,
-        kRGBA_8888_SkColorType, kUnpremul_SkAlphaType, nullptr);
+        OpenGLContext::getInstance().getDirectContext(), backendTexture,
+        kTopLeft_GrSurfaceOrigin, kRGBA_8888_SkColorType, kUnpremul_SkAlphaType,
+        nullptr);
   }
 
   std::shared_ptr<RNSkVideo> createVideo(const std::string &url) override {
@@ -176,7 +185,8 @@ public:
 #endif
   }
 
-  jsi::Value getImageBackendTexture(jsi::Runtime& runtime, sk_sp<SkImage> image) override {
+  jsi::Value getImageBackendTexture(jsi::Runtime &runtime,
+                                    sk_sp<SkImage> image) override {
     GrBackendTexture texture;
     if (!SkImages::GetBackendTextureFromImage(image, &texture, true)) {
       return jsi::Value::null();
@@ -184,13 +194,15 @@ public:
     return getJSITextureInfo(runtime, texture);
   }
 
-  jsi::Value getSurfaceBackendTexture(jsi::Runtime& runtime, sk_sp<SkSurface> surface) override {
+  jsi::Value getSurfaceBackendTexture(jsi::Runtime &runtime,
+                                      sk_sp<SkSurface> surface) override {
     GrBackendTexture texture = SkSurfaces::GetBackendTexture(
         surface.get(), SkSurface::BackendHandleAccess::kFlushRead);
     return getJSITextureInfo(runtime, texture);
   }
 
-  static jsi::Value getJSITextureInfo(jsi::Runtime& runtime, const GrBackendTexture& texture) {
+  static jsi::Value getJSITextureInfo(jsi::Runtime &runtime,
+                                      const GrBackendTexture &texture) {
     if (!texture.isValid()) {
       return jsi::Value::null();
     }
@@ -206,7 +218,8 @@ public:
     jsiTextureInfo.setProperty(runtime, "fTarget", (int)textureInfo.fTarget);
     jsiTextureInfo.setProperty(runtime, "fFormat", (int)textureInfo.fFormat);
     jsiTextureInfo.setProperty(runtime, "fID", (int)textureInfo.fID);
-    jsiTextureInfo.setProperty(runtime, "fProtected", (bool)textureInfo.fProtected);
+    jsiTextureInfo.setProperty(runtime, "fProtected",
+                               (bool)textureInfo.fProtected);
 
     return jsiTextureInfo;
   }

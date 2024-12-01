@@ -51,7 +51,6 @@ public:
         runtime, std::make_shared<JsiSkImage>(getContext(), std::move(image)));
   }
 
-
   JSI_HOST_FUNCTION(MakeImageFromViewTag) {
     auto viewTag = arguments[0].asNumber();
     auto context = getContext();
@@ -80,8 +79,9 @@ public:
   }
 
   JSI_HOST_FUNCTION(MakeImageFromNativeTexture) {
-    auto image = getContext()->makeImageFromNativeTexture(runtime,
-      jsi::Value(runtime, arguments[0]), arguments[1].asNumber(), arguments[2].asNumber(),  count > 3 && arguments[3].asBool());
+    auto image = getContext()->makeImageFromNativeTexture(
+        runtime, jsi::Value(runtime, arguments[0]), arguments[1].asNumber(),
+        arguments[2].asNumber(), count > 3 && arguments[3].asBool());
     if (image == nullptr) {
       throw std::runtime_error("Failed to convert NativeBuffer to SkImage!");
     }
